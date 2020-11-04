@@ -15,6 +15,7 @@
 
 from ..lexer import Token
 from ..model import TestCase, Keyword, ForLoop
+from ..model.blocks import IfBlock
 
 
 class Parser(object):
@@ -30,46 +31,48 @@ class Parser(object):
         raise NotImplementedError
 
 
-class TestCaseParser(Parser):
+class StepsParser(Parser):
 
-    def __init__(self, header):
-        Parser.__init__(self, TestCase(header))
-
-    def handles(self, statement):
-        if statement.type == Token.TESTCASE_NAME:
-            return False
-        return statement.type not in Token.HEADER_TOKENS
-
-    def parse(self, statement):
-        if statement.type == Token.FOR:
-            parser = ForLoopParser(statement)
-            model = parser.model
-        else:
-            parser = None
-            model = statement
-        self.model.body.append(model)
-        return parser
-
-
-class KeywordParser(Parser):
-
-    def __init__(self, header):
-        Parser.__init__(self, Keyword(header))
+    def __init__(self, model, unhandled_tokens):
+        Parser.__init__(self, model)
+        self._subsection_parser_classes = {Token.FOR: ForLoopParser, Token.IF: IfParser}
+        self._unhandled_tokens = unhandled_tokens
 
     def handles(self, statement):
-        if statement.type == Token.KEYWORD_NAME:
-            return False
-        return statement.type not in Token.HEADER_TOKENS
+        return statement.type not in self._unhandled_tokens
 
     def parse(self, statement):
-        if statement.type == Token.FOR:
-            parser = ForLoopParser(statement)
-            model = parser.model
-        else:
-            parser = None
-            model = statement
-        self.model.body.append(model)
-        return parser
+        parser_class = self._subsection_parser_classes.get(statement.type)
+        if parser_class:
+            parser = parser_class(statement)
+            self.model.body.append(parser.model)
+            return parser
+        self.model.body.append(statement)
+ 
+ 
+def TestCaseParser(header):
+    return StepsParser(TestCase(header), Token.HEADER_TOKENS + (Token.TESTCASE_NAME,))
+
+
+def KeywordParser(header):
+    return StepsParser(Keyword(header), Token.HEADER_TOKENS + (Token.KEYWORD_NAME,))
+
+
+class StepsWithEndParser(StepsParser):
+
+    def __init__(self, model):
+        StepsParser.__init__(self, model, Token.HEADER_TOKENS + (Token.TESTCASE_NAME, Token.KEYWORD_NAME))
+
+    def handles(self, statement):
+        if self.model.end:
+            return False
+        return StepsParser.handles(self, statement)
+
+    def parse(self, statement):
+        if statement.type == Token.END:
+            self.model.end = statement
+            return
+        return StepsParser.parse(self, statement)
 
 
 class ForLoopParser(Parser):
