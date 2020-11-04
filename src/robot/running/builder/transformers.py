@@ -17,7 +17,7 @@ from ast import NodeVisitor
 
 from robot.variables import VariableIterator
 
-from ..model import ForLoop, Keyword
+from ..model import ForLoop, IfExpression
 from .testsettings import TestSettings
 
 
@@ -183,6 +183,11 @@ class TestCaseBuilder(NodeVisitor):
         ForLoopBuilder(loop).visit(node)
         self.test.keywords.append(loop)
 
+    def visit_IfBlock(self, node):
+        ifblock = IfExpression(node.value, node.lineno, node._header, node._end)
+        IfExpressionBuilder(ifblock).build(node)
+        self.test.keywords.append(ifblock)
+
     def visit_TemplateArguments(self, node):
         self.test.keywords.create(args=node.args, lineno=node.lineno)
 
@@ -251,6 +256,11 @@ class KeywordBuilder(NodeVisitor):
         ForLoopBuilder(loop).visit(node)
         self.kw.keywords.append(loop)
 
+    def visit_IfBlock(self, node):
+        ifblock = IfExpression(node.value, node.lineno, node._header, node._end)
+        IfExpressionBuilder(ifblock).build(node)
+        self.kw.keywords.append(ifblock)
+
 
 class ForLoopBuilder(NodeVisitor):
 
@@ -263,3 +273,49 @@ class ForLoopBuilder(NodeVisitor):
 
     def visit_TemplateArguments(self, node):
         self.loop.keywords.create(args=node.args, lineno=node.lineno)
+
+    def visit_ForLoop(self, node):
+        loop = ForLoop(node.variables, node.values, node.flavor, node.lineno,
+                       ended=node.end is not None)
+        ForLoopBuilder(loop).build(node)
+        self.loop.keywords.append(loop)
+
+    def visit_IfBlock(self, node):
+        ifblock = IfExpression(node.value, node.lineno, node._header, node._end)
+        IfExpressionBuilder(ifblock).build(node)
+        self.loop.keywords.append(ifblock)
+
+
+class IfExpressionBuilder(NodeVisitor):
+
+    def __init__(self, ifblock):
+        self.ifblock = ifblock
+
+    def build(self, ifnode):
+        for child_node in ifnode.body:
+            self.visit(child_node)
+
+    def visit_KeywordCall(self, node):
+        self.ifblock.create_keyword(name=node.keyword, args=node.args,
+                                  assign=node.assign, lineno=node.lineno)
+
+    def visit_TemplateArguments(self, node):
+        self.ifblock.create_keyword(args=node.args, lineno=node.lineno)
+
+    def visit_ElseIfStatement(self, node):
+        self.ifblock.create_elseif(node.value)
+
+    def visit_Else(self, node):
+        self.ifblock.create_else()
+
+    def visit_IfBlock(self, node):
+        ifblock = IfExpression(node.value, node.lineno, node._header, node._end)
+        IfExpressionBuilder(ifblock).build(node)
+        self.ifblock.add_inner_block(ifblock)
+
+    def visit_ForLoop(self, node):
+        # Header and end used only for deprecation purposes. Remove in RF 3.3!
+        loop = ForLoop(node.variables, node.values, node.flavor, node.lineno,
+                       node._header, node._end)
+        ForLoopBuilder(loop).build(node)
+        self.ifblock.add_inner_block(loop)
