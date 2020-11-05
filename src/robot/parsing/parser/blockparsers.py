@@ -75,21 +75,8 @@ class StepsWithEndParser(StepsParser):
         return StepsParser.parse(self, statement)
 
 
-class ForLoopParser(Parser):
+def ForLoopParser(header):
+    return StepsWithEndParser(ForLoop(header))
 
-    def __init__(self, header):
-        Parser.__init__(self, ForLoop(header))
-        self.end_seen = False
-
-    def handles(self, statement):
-        if self.end_seen:
-            return False
-        name_tokens = (Token.TESTCASE_NAME, Token.KEYWORD_NAME)
-        return statement.type not in Token.HEADER_TOKENS + name_tokens
-
-    def parse(self, statement):
-        if statement.type == Token.END:
-            self.model.end = statement
-            self.end_seen = True
-        else:
-            self.model.body.append(statement)
+def IfParser(header):
+    return StepsWithEndParser(IfBlock(header))
