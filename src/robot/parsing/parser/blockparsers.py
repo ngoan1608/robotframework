@@ -90,6 +90,12 @@ class ForLoopParser(Parser):
     def parse(self, statement):
         if statement.type == Token.END:
             self.model.end = statement
-            self.end_seen = True
-        else:
-            self.model.body.append(statement)
+            return
+        return StepsParser.parse(self, statement)
+
+
+def ForLoopParser(header):
+    return StepsWithEndParser(ForLoop(header))
+
+def IfParser(header):
+    return StepsWithEndParser(IfBlock(header))
