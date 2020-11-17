@@ -156,37 +156,14 @@ class ForInRunner(object):
         result = KeywordResult(kwname=self._get_name(data),
                                type=data.FOR_LOOP_TYPE)
         with StatusReporter(self._context, result):
-            self._validate(data)
+            if data.error:
+                raise DataError(data.error)
             self._run(data)
 
     def _get_name(self, data):
         return '%s %s [ %s ]' % (' | '.join(data.variables),
                                  self.flavor,
                                  ' | '.join(data.values))
-
-    def _validate(self, data):
-        # TODO: Remove header and end deprecations in RF 3.3!
-        if data._header != 'FOR':
-            self._deprecated("For loop header '%s' is deprecated. "
-                             "Use 'FOR' instead." % data._header, data)
-        if data._end is None:
-            raise DataError("For loop has no closing 'END'.")
-        if data._end != 'END':
-            self._deprecated("Marking for loop body with '\\' is deprecated. "
-                             "Remove markers and use 'END' instead.", data)
-        if not data.variables:
-            raise DataError('FOR loop has no loop variables.')
-        for var in data.variables:
-            if not is_scalar_assign(var):
-                raise DataError("Invalid FOR loop variable '%s'." % var)
-        if not data.values:
-            raise DataError('FOR loop has no loop values.')
-        if not data.keywords:
-            raise DataError('FOR loop contains no keywords.')
-
-    def _deprecated(self, message, data):
-        logger.warn("Error in file '%s' in FOR loop starting on line %s: %s"
-                    % (data.source, data.lineno, message))
 
     def _run(self, data):
         errors = []
