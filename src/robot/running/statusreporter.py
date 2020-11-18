@@ -55,6 +55,16 @@ class StatusReporter(object):
         if failure is not exc_val:
             raise failure
 
+    def mark_as_not_run(self):
+        self._pass_status = 'NOT_RUN'
+
+    def _get_status(self, result):
+        if result.status == 'SKIP':
+            return 'SKIP'
+        if self._test_passed and result.passed:
+            return 'PASS'
+        return 'FAIL'
+
     def _get_failure(self, exc_type, exc_value, exc_tb, context):
         if exc_value is None:
             return None
