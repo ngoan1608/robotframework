@@ -207,10 +207,6 @@ class ElseIfStatementLexer(StatementLexer):
         self.statement[0].type = Token.ELSE_IF
         self.statement[1].type = Token.ARGUMENT
 
-    @property
-    def lineno(self):
-        return self.statement[0].lineno
-
 
 class ElseLexer(StatementLexer):
 
@@ -220,10 +216,6 @@ class ElseLexer(StatementLexer):
     def lex(self):
         self.statement[0].type = Token.ELSE
 
-    @property
-    def lineno(self):
-        return self.statement[0].lineno
-
 
 class EndLexer(StatementLexer):
 
@@ -232,7 +224,3 @@ class EndLexer(StatementLexer):
 
     def lex(self):
         self.statement[0].type = Token.END
-
-    @property
-    def lineno(self):
-        return self.statement[0].lineno
