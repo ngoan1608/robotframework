@@ -70,7 +70,7 @@ class Token(object):
     OLD_FOR_INDENT = 'OLD_FOR_INDENT'
     END = 'END'
     IF = 'IF'
-    ELSE_IF = 'ELSE_IF'
+    ELSE_IF = 'ELSE IF'    # FIXME: Remove underscores from other values as well.
     ELSE = 'ELSE'
 
     SEPARATOR = 'SEPARATOR'
