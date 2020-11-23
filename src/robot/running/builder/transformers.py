@@ -98,8 +98,10 @@ class SuiteBuilder(NodeVisitor):
         pass
 
     def visit_Variable(self, node):
-        self.suite.resource.variables.create(name=node.name, value=node.value,
-                                             lineno=node.lineno, error=node.error)
+        self.suite.resource.variables.create(name=node.name,
+                                             value=node.value,
+                                             lineno=node.lineno,
+                                             error=format_error(node.errors))
 
     def visit_TestCase(self, node):
         TestCaseBuilder(self.suite, self.test_defaults).visit(node)
@@ -130,8 +132,11 @@ class ResourceBuilder(NodeVisitor):
                                      args=node.args, lineno=node.lineno)
 
     def visit_Variable(self, node):
-        self.resource.variables.create(name=node.name, value=node.value,
-                                       lineno=node.lineno, error=node.error)
+        self.resource.variables.create(name=node.name,
+                                       value=node.value,
+                                       lineno=node.lineno,
+                                       error=format_error(node.errors))
+
     def visit_Keyword(self, node):
         KeywordBuilder(self.resource).visit(node)
 
@@ -273,12 +278,10 @@ class ForLoopBuilder(NodeVisitor):
         return self.loop
 
     def _get_error(self, node):
-        errors = node.errors
-        if not errors:
-            return None
-        if len(errors) == 1:
-            return errors[0]
-        return 'Multiple errors:\n- ' + '\n- '.join(errors)
+        errors = node.header.errors + node.errors
+        if node.end:
+            errors += node.end.errors
+        return format_error(errors)
 
     def visit_KeywordCall(self, node):
         self.loop.keywords.create(name=node.keyword, args=node.args,
@@ -310,19 +313,17 @@ class IfBuilder(NodeVisitor):
         return self.block
 
     def _build_block(self, node):
+        errors = self._get_errors(node)
         return If(node.condition, lineno=node.lineno,
-                  error=self._get_error(node), type=node.type)
+                  error=format_error(errors), type=node.type)
 
-    def _get_error(self, node):
-        errors = []
-        while node:
-            errors.extend(node.errors)
-            node = node.orelse
-        if not errors:
-            return None
-        if len(errors) == 1:
-            return errors[0]
-        return 'Multiple errors:\n- ' + '\n- '.join(errors)
+    def _get_errors(self, node):
+        errors = node.header.errors + node.errors
+        if node.orelse:
+            errors += self._get_errors(node.orelse)
+        if node.end:
+            errors += node.end.errors
+        return errors
 
     def visit_KeywordCall(self, node):
         self.block.keywords.create(name=node.keyword, args=node.args,
@@ -345,3 +346,11 @@ class IfBuilder(NodeVisitor):
     def visit_ForLoop(self, node):
         loop = ForLoopBuilder().build(node)
         self.block.keywords.append(loop)
+
+
+def format_error(errors):
+    if not errors:
+        return None
+    if len(errors) == 1:
+        return errors[0]
+    return '\n- '.join(('Multiple errors:',) + errors)
