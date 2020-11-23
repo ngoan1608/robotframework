@@ -68,7 +68,8 @@ class Keyword(model.Keyword):
         return StepRunner(context).run_step(self)
 
 
-class ForLoop(Keyword):
+@py2to3
+class For(Keyword):
     """Represents a for loop in test data.
 
     Contains keywords in the loop body as child :attr:`keywords`.

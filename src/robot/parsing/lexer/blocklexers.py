@@ -23,8 +23,9 @@ from .statementlexers import (Lexer,
                               ErrorSectionHeaderLexer,
                               TestOrKeywordSettingLexer,
                               KeywordCallLexer,
-                              ForLoopHeaderLexer,
-                              EndLexer, IfStatementLexer, ElseLexer, ElseIfStatementLexer)
+                              ForHeaderLexer,
+                              IfHeaderLexer, ElseIfHeaderLexer, ElseHeaderLexer,
+                              EndLexer)
 
 
 class BlockLexer(Lexer):
@@ -172,7 +173,7 @@ class TestOrKeywordLexer(BlockLexer):
                 statement.pop(0).type = None    # These tokens will be ignored
 
     def lexer_classes(self):
-        return (TestOrKeywordSettingLexer, ForLoopLexer, IfBlockLexer, KeywordCallLexer)
+        return (TestOrKeywordSettingLexer, ForLexer, IfLexer, KeywordCallLexer)
 
 
 class TestCaseLexer(TestOrKeywordLexer):
@@ -192,7 +193,7 @@ class KeywordLexer(TestOrKeywordLexer):
         TestOrKeywordLexer.__init__(self, ctx.keyword_context())
 
 
-class ForLoopLexer(BlockLexer):
+class ForLexer(BlockLexer):
 
     def __init__(self, ctx):
         BlockLexer.__init__(self, ctx)
@@ -201,7 +202,7 @@ class ForLoopLexer(BlockLexer):
         self._block_level = 0
 
     def handles(self, statement):
-        return ForLoopHeaderLexer(self.ctx).handles(statement)
+        return ForHeaderLexer(self.ctx).handles(statement)
 
     def accepts_more(self, statement):
         if statement[0].value == '\\':
@@ -214,7 +215,7 @@ class ForLoopLexer(BlockLexer):
 
     def input(self, statement):
         lexer = BlockLexer.input(self, statement)
-        if isinstance(lexer, (IfStatementLexer, ForLoopHeaderLexer)):
+        if isinstance(lexer, (IfHeaderLexer, ForHeaderLexer)):
             self._block_level += 1
         if isinstance(lexer, EndLexer):
             self._end_seen = True
@@ -222,10 +223,10 @@ class ForLoopLexer(BlockLexer):
             statement.pop(0)
 
     def lexer_classes(self):
-        return (ForLoopHeaderLexer, IfBlockLexer, EndLexer, KeywordCallLexer)
+        return (ForHeaderLexer, IfLexer, EndLexer, KeywordCallLexer)
 
 
-class IfBlockLexer(BlockLexer):
+class IfLexer(BlockLexer):
 
     def __init__(self, ctx):
         BlockLexer.__init__(self, ctx)
@@ -235,27 +236,29 @@ class IfBlockLexer(BlockLexer):
         self._last_block_has_content = False
 
     def handles(self, statement):
-        return IfStatementLexer(self.ctx).handles(statement)
+        return IfHeaderLexer(self.ctx).handles(statement)
 
     def accepts_more(self, statement):
         return not self._end_seen
 
+    # FIXME: Cleanup. Consider adding common base class with ForLexer.
     def input(self, statement):
         lexer = BlockLexer.input(self, statement)
-        if isinstance(lexer, (IfStatementLexer, ForLoopHeaderLexer)):
+        if isinstance(lexer, (IfHeaderLexer, ForHeaderLexer)):
             self._block_level += 1
             self._last_block_has_content = self._block_level > 1
         elif isinstance(lexer, EndLexer):
             self._last_block_has_content = self._block_level > 1
             self._end_seen = self._block_level == 1
             self._block_level -= 1
-        elif isinstance(lexer, ElseLexer):
+        elif isinstance(lexer, ElseHeaderLexer):
             self._last_block_has_content = False
             self._else_seen = True
-        elif isinstance(lexer, ElseIfStatementLexer):
+        elif isinstance(lexer, ElseIfHeaderLexer):
             self._last_block_has_content = False
         else:
             self._last_block_has_content = True
 
     def lexer_classes(self):
-        return (IfStatementLexer, ElseIfStatementLexer, ElseLexer, ForLoopLexer, EndLexer, KeywordCallLexer)
+        return (IfHeaderLexer, ElseIfHeaderLexer, ElseHeaderLexer,
+                ForLexer, EndLexer, KeywordCallLexer)

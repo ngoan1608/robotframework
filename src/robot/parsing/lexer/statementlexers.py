@@ -137,7 +137,7 @@ class KeywordCallLexer(StatementLexer):
                 keyword_seen = True
 
 
-class ForLoopHeaderLexer(StatementLexer):
+class ForHeaderLexer(StatementLexer):
     separators = ('IN', 'IN RANGE', 'IN ENUMERATE', 'IN ZIP')
 
     def handles(self, statement):
@@ -159,7 +159,7 @@ class ForLoopHeaderLexer(StatementLexer):
                 token.type = Token.VARIABLE
 
 
-class IfStatementLexer(StatementLexer):
+class IfHeaderLexer(StatementLexer):
 
     def handles(self, statement):
         return statement[0].value == 'IF'
@@ -170,7 +170,7 @@ class IfStatementLexer(StatementLexer):
             token.type = Token.ARGUMENT
 
 
-class ElseIfStatementLexer(StatementLexer):
+class ElseIfHeaderLexer(StatementLexer):
 
     def handles(self, statement):
         return normalize_whitespace(statement[0].value) == 'ELSE IF'
@@ -181,7 +181,7 @@ class ElseIfStatementLexer(StatementLexer):
             token.type = Token.ARGUMENT
 
 
-class ElseLexer(StatementLexer):
+class ElseHeaderLexer(StatementLexer):
 
     def handles(self, statement):
         return statement[0].value == 'ELSE'
