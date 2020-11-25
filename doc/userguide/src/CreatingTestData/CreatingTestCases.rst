@@ -896,7 +896,7 @@ all the looped elements even if there are failures.
 .. sourcecode:: robotframework
 
    *** Test Cases ***
-   Template and for
+   Template with for loop
        [Template]    Example keyword
        FOR    ${item}    IN    @{ITEMS}
            ${item}    2nd arg
@@ -908,8 +908,8 @@ all the looped elements even if there are failures.
 Templates with if expression
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`if expression`_ can be also used together with templates.
-This can be useful for example when used together with for loops to
+`If expression`_ can be also used together with templates.
+This can be useful, for example, when used together with `for loops`_ to
 filter executed arguments.
 
 .. sourcecode:: robotframework
@@ -922,7 +922,6 @@ filter executed arguments.
                ${item}    2nd arg
            END
        END
-
 
 Different test case styles
 --------------------------
