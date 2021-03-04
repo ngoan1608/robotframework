@@ -202,10 +202,13 @@ class TestCaseBuilder(NodeVisitor):
         self.test.doc = node.value
 
     def visit_Setup(self, node):
-        self.settings.setup = fixture(node, Keyword.SETUP_TYPE)
-
+        self.settings.setup = {
+            'name': node.name, 'args': node.args, 'lineno': node.lineno
+        }
     def visit_Teardown(self, node):
-        self.settings.teardown = fixture(node, Keyword.TEARDOWN_TYPE)
+        self.settings.teardown = {
+            'name': node.name, 'args': node.args, 'lineno': node.lineno
+        }
 
     def visit_Timeout(self, node):
         self.settings.timeout = node.value
@@ -250,7 +253,9 @@ class KeywordBuilder(NodeVisitor):
         self.kw.timeout = node.value
 
     def visit_Teardown(self, node):
-        self.teardown = fixture(node, Keyword.TEARDOWN_TYPE)
+        self.teardown = {
+            'name': node.name, 'args': node.args, 'lineno': node.lineno
+        }
 
     def visit_KeywordCall(self, node):
         self.kw.keywords.create(name=node.keyword, args=node.args,

@@ -56,8 +56,8 @@ class Keyword(model.Keyword):
     message_class = None  #: Internal usage only.
 
     def __init__(self, name='', doc='', args=(), assign=(), tags=(),
-                 timeout=None, type=model.Keyword.KEYWORD_TYPE, lineno=None):
-        model.Keyword.__init__(self, name, doc, args, assign, tags, timeout, type)
+                 timeout=None, type=model.Keyword.KEYWORD_TYPE, parent=None, lineno=None):
+        model.Keyword.__init__(self, name, doc, args, assign, tags, timeout, type, parent)
         self.lineno = lineno
 
     def run(self, context):

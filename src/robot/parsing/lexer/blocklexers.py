@@ -198,6 +198,7 @@ class ForLoopLexer(BlockLexer):
         BlockLexer.__init__(self, ctx)
         self._old_style_for = False
         self._end_seen = False
+        self._block_level = 0
 
     def handles(self, statement):
         return ForLoopHeaderLexer(self.ctx).handles(statement)
