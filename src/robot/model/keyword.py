@@ -32,9 +32,9 @@ class Keyword(ModelObject):
     """
     __slots__ = ['_name', 'doc', 'args', 'assign', 'timeout', 'type',
                  '_teardown', '_sort_key', '_next_child_sort_key']
-    KEYWORD_TYPE  = 'kw'
-    SETUP_TYPE    = 'setup'
-    TEARDOWN_TYPE = 'teardown'
+    KEYWORD_TYPE = 'kw'         #: Normal keyword :attr:`type`.
+    SETUP_TYPE = 'setup'        #: Setup :attr:`type`.
+    TEARDOWN_TYPE = 'teardown'  #: Teardown :attr:`type`.
     FOR_LOOP_TYPE = 'for'
     FOR_ITEM_TYPE = 'foritem'
     IF_TYPE       = 'if'
@@ -42,8 +42,8 @@ class Keyword(ModelObject):
     ELSE_TYPE     = 'else'
 
     def __init__(self, name='', doc='', args=(), assign=(), tags=(),
-                 timeout=None, type=KEYWORD_TYPE):
-        self.parent = None
+                 timeout=None, type=KEYWORD_TYPE, parent=None):
+        self.parent = parent
         self._name = name
         self.doc = doc
         self.args = args      #: Keyword arguments as a list of strings.
@@ -52,8 +52,7 @@ class Keyword(ModelObject):
         self.timeout = timeout
         #: Keyword type as a string. Values defined as constants on the class level.
         self.type = type
-        self.messages = None
-        self.keywords = None
+        self._teardown = None
         self._sort_key = -1
         self._next_child_sort_key = 0
 

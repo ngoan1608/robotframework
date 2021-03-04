@@ -29,7 +29,7 @@ from .configurer import SuiteConfigurer
 from .testsuite import TestSuite
 from .testcase import TestCase
 from .keyword import Keyword, Keywords
-from .message import Message
+from .message import Message, Messages
 from .modifier import ModelModifier
 from .tags import Tags, TagPattern, TagPatterns
 from .criticality import Criticality
@@ -38,3 +38,4 @@ from .visitor import SuiteVisitor
 from .totalstatistics import TotalStatisticsBuilder
 from .statistics import Statistics
 from .itemlist import ItemList
+from .message import Messages

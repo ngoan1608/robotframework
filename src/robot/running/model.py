@@ -85,7 +85,7 @@ class ForLoop(Keyword):
     @setter
     def keywords(self, keywords):
         """Child keywords as a :class:`~.Keywords` object."""
-        return Keywords(Keyword, self, keywords)
+        return model.Keywords(Keyword, self, keywords)
 
     @property
     def variables(self):
@@ -118,7 +118,7 @@ class If(Keyword):
     @setter
     def keywords(self, keywords):
         """Child keywords as a :class:`~.Keywords` object."""
-        return Keywords(Keyword, self, keywords)
+        return model.Keywords(Keyword, self, keywords)
 
     @property
     def condition(self):
