@@ -39,7 +39,7 @@ from robot import model
 from robot.conf import RobotSettings
 from robot.model import Keywords
 from robot.output import LOGGER, Output, pyloggingconf
-from robot.utils import seq2str, setter
+from robot.utils import seq2str, setter, py2to3
 
 from .randomizer import Randomizer
 from .steprunner import StepRunner
@@ -70,6 +70,7 @@ class Keyword(model.Keyword):
         return StepRunner(context).run_step(self)
 
 
+@py2to3
 class For(Keyword):
     """Represents a for loop in test data.
 
