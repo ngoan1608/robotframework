@@ -68,6 +68,11 @@ class SectionParser(Parser):
         return statement.type not in Token.HEADER_TOKENS
 
     def parse(self, statement):
+        parser_class = self.subsection_parsers.get(statement.type)
+        if parser_class:
+            parser = parser_class(statement)
+            self.model.body.append(parser.model)
+            return parser
         self.model.body.append(statement)
 
 
@@ -92,16 +97,6 @@ class ImplicitCommentSectionParser(SectionParser):
 class TestCaseSectionParser(SectionParser):
     subsection_parsers = {Token.TESTCASE_NAME: TestCaseParser}
     section_class = TestCaseSection
-
-    def parse(self, statement):
-        if statement.type == Token.TESTCASE_NAME:
-            parser = TestCaseParser(statement)
-            model = parser.model
-        else:    # Empty lines and comments before first test.
-            parser = None
-            model = statement
-        self.model.body.append(model)
-        return parser
 
 
 class KeywordSectionParser(SectionParser):

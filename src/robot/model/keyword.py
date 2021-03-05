@@ -19,7 +19,6 @@ from operator import attrgetter
 from robot.utils import setter
 
 from .itemlist import ItemList
-from .message import Message, Messages
 from .modelobject import ModelObject
 from .tags import Tags
 
@@ -64,10 +63,21 @@ class Keyword(ModelObject):
     def name(self, name):
         self._name = name
 
+    @property
+    def teardown(self):
+        if self._teardown is None:
+            self._teardown = (self.keyword_class or self.__class__)(
+                parent=self, type=self.TEARDOWN_TYPE)
+        return self._teardown
+
+    @teardown.setter
+    def teardown(self, td):
+        self._teardown = td
+
     @setter
     def parent(self, parent):
         """Parent test suite, test case or keyword."""
-        if parent and parent is not self.parent:
+        if parent and parent is not getattr(self, 'parent', None):
             self._sort_key = getattr(parent, '_child_sort_key', -1)
         return parent
 
@@ -81,25 +91,6 @@ class Keyword(ModelObject):
         """Keyword tags as a :class:`~.model.tags.Tags` object."""
         return Tags(tags)
 
-    @setter
-    def keywords(self, keywords):
-        """Child keywords as a :class:`~.Keywords` object."""
-        return Keywords(self.keyword_class or self.__class__, self, keywords)
-
-    @setter
-    def messages(self, messages):
-        """Messages as a :class:`~.model.message.Messages` object."""
-        return Messages(self.message_class, self, messages)
-
-    @property
-    def children(self):
-        """Child :attr:`keywords` and :attr:`messages` in creation order."""
-        # It would be cleaner to store keywords/messages in same `children`
-        # list and turn `keywords` and `messages` to properties that pick items
-        # from it. That would require bigger changes to the model, though.
-        return sorted(chain(self.keywords, self.messages),
-                      key=attrgetter('_sort_key'))
-
     @property
     def id(self):
         """Keyword id in format like ``s1-t3-k1``.
@@ -109,11 +100,17 @@ class Keyword(ModelObject):
         """
         if not self.parent:
             return 'k1'
-        return '%s-k%d' % (self.parent.id, self.parent.keywords.index(self)+1)
+        if self.parent.keywords:
+            return '%s-k%d' % (self.parent.id, self.parent.keywords.index(self)+1)
+        fixtures = [kw for kw in (self.parent.setup, self.parent.teardown) if kw]
+        return '%s-k%d' % (self.parent.id, fixtures.index(self)+1)
 
     @property
     def source(self):
         return self.parent.source if self.parent is not None else None
+
+    def reset(self):
+        self.__init__(type=self.type)
 
     def visit(self, visitor):
         """:mod:`Visitor interface <robot.model.visitor>` entry-point."""

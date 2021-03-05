@@ -37,6 +37,7 @@ import os
 
 from robot import model
 from robot.conf import RobotSettings
+from robot.model import Keywords
 from robot.output import LOGGER, Output, pyloggingconf
 from robot.utils import seq2str, setter
 
@@ -55,9 +56,10 @@ class Keyword(model.Keyword):
     __slots__ = ['lineno']
     message_class = None  #: Internal usage only.
 
-    def __init__(self, name='', doc='', args=(), assign=(), tags=(),
-                 timeout=None, type=model.Keyword.KEYWORD_TYPE, parent=None, lineno=None):
-        model.Keyword.__init__(self, name, doc, args, assign, tags, timeout, type, parent)
+    def __init__(self, name='', doc='', args=(), assign=(), tags=(), timeout=None,
+                 type=model.Keyword.KEYWORD_TYPE, lineno=None, parent=None):
+        model.Keyword.__init__(self, name, doc, args, assign, tags, timeout, type,
+                               parent)
         self.lineno = lineno
 
     def run(self, context):
@@ -68,7 +70,6 @@ class Keyword(model.Keyword):
         return StepRunner(context).run_step(self)
 
 
-@py2to3
 class For(Keyword):
     """Represents a for loop in test data.
 
@@ -86,7 +87,7 @@ class For(Keyword):
     @setter
     def keywords(self, keywords):
         """Child keywords as a :class:`~.Keywords` object."""
-        return model.Keywords(Keyword, self, keywords)
+        return Keywords(Keyword, self, keywords)
 
     @property
     def variables(self):
@@ -119,7 +120,7 @@ class If(Keyword):
     @setter
     def keywords(self, keywords):
         """Child keywords as a :class:`~.Keywords` object."""
-        return model.Keywords(Keyword, self, keywords)
+        return Keywords(Keyword, self, keywords)
 
     @property
     def condition(self):
@@ -347,10 +348,17 @@ class UserKeyword(object):
         self.keywords = []
         self.lineno = lineno
         self.parent = parent
+        self._teardown = None
 
     @setter
     def keywords(self, keywords):
         return model.Keywords(Keyword, self, keywords)
+
+    @property
+    def teardown(self):
+        if self._teardown is None:
+            self._teardown = Keyword(parent=self, type=Keyword.TEARDOWN_TYPE)
+        return self._teardown
 
     @setter
     def tags(self, tags):
